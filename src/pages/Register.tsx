@@ -27,38 +27,21 @@ export default function Register() {
 
     await handleApiCall(
       () => authService.checkEmail(email),
-      (response: any) => {
-        console.log("📩 Réponse API:", response?.data);
-
-        if (!response?.data?.success) {
-          setError(response?.data?.error || "Une erreur est survenue. Veuillez réessayer plus tard.");
-          return;
-        }
-
-        const message = response?.data?.data?.message;
+      (response) => {
+        const message = response.message;
         setEmailStatus(message);
 
-        switch (message) {
-          case "LOGIN_SUCCESS":
-            setError("✅ Votre compte est déjà activé. Redirection vers la page de connexion...");
-            setTimeout(() => (window.location.href = "/"), 2000);
-            break;
-
-          case "ACCOUNT_NOT_ACTIVATED":
-            setStep("details");
-            break;
-
-          case "USER_NOT_FOUND":
-            setError("❌ Aucun compte associé à cet email. Contactez votre supérieur pour créer un compte.");
-            break;
-
-          default:
-            setError("⚠️ Réponse inattendue du serveur. Merci de contacter l’administrateur.");
-            console.warn("Réponse inattendue :", response?.data);
+        if (response.exists && response.hasPassword) {
+          setError("Votre compte est déjà activé. Redirection vers la page de connexion...");
+          setTimeout(() => (window.location.href = "/"), 2000);
+        } else if (response.exists && !response.hasPassword) {
+          setStep("details");
+        } else {
+          setError("Aucun compte associé à cet email. Contactez votre supérieur pour créer un compte.");
         }
       },
       (err) => {
-        setError(err?.message || "❌ Impossible de contacter le serveur. Vérifiez votre connexion.");
+        setError(err?.message || "Impossible de contacter le serveur. Vérifiez votre connexion.");
       }
     );
   };
@@ -67,11 +50,6 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-
-    if (emailStatus !== "ACCOUNT_NOT_ACTIVATED") {
-      setError("Vous ne pouvez pas créer de compte sans invitation valide.");
-      return;
-    }
 
     if (!formData.password || !formData.confirmPassword) {
       setError("Veuillez remplir tous les champs.");
@@ -85,7 +63,7 @@ export default function Register() {
 
     await handleApiCall(
       () =>
-        authService.createAdmin({
+        authService.createPassword({
           email,
           password: formData.password,
         }),

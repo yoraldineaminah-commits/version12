@@ -3,7 +3,7 @@ import { apiService } from './api';
 export interface CheckEmailResponse {
   exists: boolean;
   hasPassword: boolean;
-  role?: string;
+  message: string;
 }
 
 export interface AuthResponse {
@@ -11,10 +11,13 @@ export interface AuthResponse {
   user: {
     id: number;
     email: string;
-    firstName: string;
-    lastName: string;
+    nom: string;
+    prenom: string;
+    phone: string;
+    department: string;
     role: string;
     accountStatus: string;
+    avatar: string | null;
   };
 }
 
@@ -30,22 +33,32 @@ export interface CreatePasswordRequest {
 
 export interface CreateAdminRequest {
   email: string;
-  firstName: string;
-  lastName: string;
+  nom: string;
+  prenom: string;
+  phone: string;
+  departement: string;
   password: string;
 }
 
 export interface CreateEncadreurRequest {
   email: string;
-  firstName: string;
-  lastName: string;
-  department: string;
+  nom: string;
+  prenom: string;
+  phone: string;
+  departement: string;
+  specialization: string;
 }
 
 export interface CreateStagiaireRequest {
   email: string;
-  firstName: string;
-  lastName: string;
+  nom: string;
+  prenom: string;
+  phone: string;
+  departement: string;
+  school: string;
+  major: string;
+  startDate: string;
+  endDate: string;
   encadreurId: number;
 }
 
@@ -66,20 +79,20 @@ export const authService = {
     return response;
   },
 
-  async createAdmin(request: CreateAdminRequest): Promise<any> {
-    return apiService.post('/auth/register/admin', request, false);
+  async createAdmin(request: CreateAdminRequest): Promise<AuthResponse> {
+    return apiService.post<AuthResponse>('/auth/register/admin', request, false);
   },
 
   async initializeAdmin(): Promise<any> {
     return apiService.post('/auth/init-admin', {}, false);
   },
 
-  async createEncadreur(request: CreateEncadreurRequest): Promise<any> {
-    return apiService.post('/auth/register/encadreur', request);
+  async createEncadreur(request: CreateEncadreurRequest): Promise<AuthResponse['user']> {
+    return apiService.post<AuthResponse['user']>('/auth/register/encadreur', request);
   },
 
-  async createStagiaire(request: CreateStagiaireRequest): Promise<any> {
-    return apiService.post('/auth/register/stagiaire', request);
+  async createStagiaire(request: CreateStagiaireRequest): Promise<AuthResponse['user']> {
+    return apiService.post<AuthResponse['user']>('/auth/register/stagiaire', request);
   },
 
   logout() {

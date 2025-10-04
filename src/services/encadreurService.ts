@@ -1,16 +1,22 @@
 import { apiService } from './api';
+import { InternDTO } from './internService';
 
 export interface EncadreurDTO {
   id: number;
-  userId: number;
   email: string;
-  firstName: string;
-  lastName: string;
+  nom: string;
+  prenom: string;
+  phone: string;
   department: string;
-  internCount: number;
+  role: string;
+  accountStatus: string;
+  avatar: string | null;
 }
 
 export interface UpdateEncadreurRequest {
+  nom?: string;
+  prenom?: string;
+  phone?: string;
   department?: string;
 }
 
@@ -21,6 +27,14 @@ export const encadreurService = {
 
   async getEncadreurById(id: number): Promise<EncadreurDTO> {
     return apiService.get<EncadreurDTO>(`/encadreurs/${id}`);
+  },
+
+  async getEncadreurInterns(id: number): Promise<InternDTO[]> {
+    return apiService.get<InternDTO[]>(`/encadreurs/${id}/interns`);
+  },
+
+  async getEncadreurInternCount(id: number): Promise<number> {
+    return apiService.get<number>(`/encadreurs/${id}/intern-count`);
   },
 
   async updateEncadreur(id: number, request: UpdateEncadreurRequest): Promise<EncadreurDTO> {

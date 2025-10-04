@@ -4,24 +4,23 @@ export interface ProjectDTO {
   id: number;
   title: string;
   description: string;
-  internId: number;
-  internName: string;
   encadreurId: number;
-  encadreurName: string;
   startDate: string;
   endDate: string;
-  status: string;
+  status: 'PLANNING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
   progress: number;
-  createdAt: string;
-  updatedAt: string;
+  department: string;
 }
 
 export interface CreateProjectRequest {
   title: string;
   description: string;
-  internId: number;
+  encadreurId: number;
   startDate: string;
   endDate: string;
+  status: 'PLANNING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
+  progress: number;
+  department: string;
 }
 
 export interface UpdateProjectRequest {
@@ -29,25 +28,26 @@ export interface UpdateProjectRequest {
   description?: string;
   startDate?: string;
   endDate?: string;
-  status?: string;
+  status?: 'PLANNING' | 'IN_PROGRESS' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
   progress?: number;
 }
 
+export interface AssignInternsRequest {
+  internIds: number[];
+}
+
 export const projectService = {
-  async getAllProjects(): Promise<ProjectDTO[]> {
-    return apiService.get<ProjectDTO[]>('/projects');
+  async getAllProjects(params?: { encadreurId?: number; stagiaireId?: number }): Promise<ProjectDTO[]> {
+    const query = new URLSearchParams();
+    if (params?.encadreurId) query.append('encadreurId', params.encadreurId.toString());
+    if (params?.stagiaireId) query.append('stagiaireId', params.stagiaireId.toString());
+
+    const queryString = query.toString() ? `?${query.toString()}` : '';
+    return apiService.get<ProjectDTO[]>(`/projects${queryString}`);
   },
 
   async getProjectById(id: number): Promise<ProjectDTO> {
     return apiService.get<ProjectDTO>(`/projects/${id}`);
-  },
-
-  async getProjectsByIntern(internId: number): Promise<ProjectDTO[]> {
-    return apiService.get<ProjectDTO[]>(`/projects/intern/${internId}`);
-  },
-
-  async getProjectsByEncadreur(encadreurId: number): Promise<ProjectDTO[]> {
-    return apiService.get<ProjectDTO[]>(`/projects/encadreur/${encadreurId}`);
   },
 
   async createProject(request: CreateProjectRequest): Promise<ProjectDTO> {
@@ -56,6 +56,10 @@ export const projectService = {
 
   async updateProject(id: number, request: UpdateProjectRequest): Promise<ProjectDTO> {
     return apiService.put<ProjectDTO>(`/projects/${id}`, request);
+  },
+
+  async assignInterns(id: number, request: AssignInternsRequest): Promise<ProjectDTO> {
+    return apiService.post<ProjectDTO>(`/projects/${id}/assign-interns`, request);
   },
 
   async deleteProject(id: number): Promise<void> {

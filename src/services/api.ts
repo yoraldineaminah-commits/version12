@@ -51,8 +51,24 @@ class ApiService {
     }
 
     try {
-      return await response.json();
-    } catch {
+      const jsonResponse = await response.json();
+
+      if (jsonResponse && typeof jsonResponse === 'object' && 'success' in jsonResponse && 'data' in jsonResponse) {
+        if (!jsonResponse.success && jsonResponse.error) {
+          const error: ApiError = {
+            message: jsonResponse.error,
+            status: response.status,
+          };
+          throw error;
+        }
+        return jsonResponse.data;
+      }
+
+      return jsonResponse;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        throw error;
+      }
       return {} as T;
     }
   }
@@ -98,6 +114,19 @@ class ApiService {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'PUT',
+        headers: this.getHeaders(includeAuth),
+        body: data ? JSON.stringify(data) : undefined,
+      });
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async patch<T>(endpoint: string, data?: any, includeAuth: boolean = true): Promise<T> {
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'PATCH',
         headers: this.getHeaders(includeAuth),
         body: data ? JSON.stringify(data) : undefined,
       });
